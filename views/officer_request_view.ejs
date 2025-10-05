@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Request Details</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: #fff8e1; /* soft cream background */
+            font-family: 'Segoe UI', sans-serif;
+        }
+        h2 {
+            color: #e67e22;
+            font-weight: bold;
+        }
+        .card {
+            border: none;
+            border-radius: 12px;
+            background: #fff3cd; /* pale yellow to match theme */
+            box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .card h5 {
+            color: #e67e22;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        .preview-box {
+            border: 1px solid #f5c26b;
+            border-radius: 8px;
+            padding: 10px;
+            background: #fffdf5;
+        }
+        iframe {
+            width: 100%;
+            height: 400px;
+            border: none;
+            border-radius: 6px;
+        }
+        img {
+            max-width: 100%;
+            border-radius: 6px;
+        }
+        /* Button styles */
+        .btn-orange {
+            background-color: #e67e22;
+            color: white;
+            border: none;
+        }
+        .btn-orange:hover {
+            background-color: #ca6f1e;
+        }
+        .btn-secondary {
+            background-color: #b2bec3;
+            border: none;
+        }
+        .btn-secondary:hover {
+            background-color: #636e72;
+        }
+    </style>
+</head>
+<body>
+      <!-- Header -->
+  <nav class="navbar navbar-expand-lg sticky-top" style="background-color: #0d47a1;">
+    <div class="container-fluid">
+      <a class="navbar-brand fw-bold text-white" href="/">E-Government Portal</a>
+      <div class="d-flex align-items-center">
+        <a href="/" class="nav-link text-white me-3">Home</a>
+        <a href="/help" class="nav-link text-white me-3">Help</a>
+        <form action="/logout" method="POST" class="d-inline">
+          <button type="submit" class="btn btn-light btn-sm">Logout</button>
+        </form>
+      </div>
+    </div>
+  </nav>
+  
+<div class="container mt-4 mb-5">
+    <h2 class="mb-4 text-center">Request Details</h2>
+
+    <!-- Request Info -->
+    <div class="card p-3">
+        <h5>Request Information</h5>
+        <p><strong>Service:</strong> <%= request.service_name %></p>
+        <p><strong>Description:</strong> <%= request.description %></p>
+        <p><strong>Status:</strong> 
+            <span class="badge 
+                <%= request.status === 'under_review' ? 'bg-warning text-dark' : 
+                    request.status === 'approved' ? 'bg-success' : 'bg-danger' %>">
+                <%= request.status %>
+            </span>
+        </p>
+        <p><strong>Submitted:</strong> <%= request.created_at.toDateString() %></p>
+    </div>
+
+    <!-- Citizen Info -->
+    <div class="card p-3">
+        <h5>Citizen Information</h5>
+        <p><strong>Name:</strong> <%= request.citizen_name %></p>
+        <p><strong>Email:</strong> <%= request.citizen_email %></p>
+        <p><strong>Contact:</strong> <%= request.citizen_contact %></p>
+        <p><strong>National ID:</strong> <%= request.national_id %></p>
+    </div>
+
+    <!-- Documents -->
+    <div class="card p-3">
+        <h5>Attached Documents</h5>
+        <% if (documents && documents.length > 0) { %>
+            <% documents.forEach(doc => { %>
+                <div class="mb-3 preview-box">
+                    <% if (doc.file_path && doc.file_path.endsWith('.pdf')) { %>
+                        <iframe src="<%= doc.file_path %>"></iframe>
+                    <% } else if (doc.file_path) { %>
+                        <img src="<%= doc.file_path %>" alt="Document Preview">
+                    <% } else { %>
+                        <p>No preview available</p>
+                    <% } %>
+                </div>
+            <% }) %>
+        <% } else { %>
+            <p>No documents uploaded.</p>
+        <% } %>
+    </div>
+
+    <!-- Payment Proof -->
+    <div class="card p-3">
+        <h5>Payment Information</h5>
+        <% if (payment && payment.proof_file) { %>
+            <p><strong>Amount:</strong> $<%= payment.amount %></p>
+            <p><strong>Status:</strong> <%= payment.status %></p>
+            <div class="preview-box">
+                <% if (payment.proof_file.endsWith('.pdf')) { %>
+                    <iframe src="<%= payment.proof_file %>"></iframe>
+                <% } else { %>
+                    <img src="<%= payment.proof_file %>" alt="Payment Proof">
+                <% } %>
+            </div>
+        <% } else { %>
+            <p>No payment proof uploaded.</p>
+        <% } %>
+    </div>
+
+    <!-- Actions -->
+    <div class="text-center mt-4">
+        <% if (request.status === 'under_review') { %>
+            <form action="/officer/requests/<%= request.id %>/approve" method="POST" style="display:inline;">
+                <button class="btn btn-success me-2">Approve</button>
+            </form>
+            <form action="/officer/requests/<%= request.id %>/reject" method="POST" style="display:inline;">
+                <button class="btn btn-danger me-2">Reject</button>
+            </form>
+        <% } else { %>
+            <p class="text-muted">This request has already been <%= request.status %>.</p>
+        <% } %>
+
+        <a href="/officer/requests/pending" class="btn btn-orange">⬅ Back</a>
+    </div>
+</div>
+</body>
+</html>

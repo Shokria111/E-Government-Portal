@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Edit User</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+      <!-- Header -->
+  <nav class="navbar navbar-expand-lg sticky-top" style="background-color: #0d47a1;">
+    <div class="container-fluid">
+      <a class="navbar-brand fw-bold text-white" href="/">E-Government Portal</a>
+      <div class="d-flex align-items-center">
+        <a href="/" class="nav-link text-white me-3">Home</a>
+        <a href="/help" class="nav-link text-white me-3">Help</a>
+        <form action="/logout" method="POST" class="d-inline">
+          <button type="submit" class="btn btn-light btn-sm">Logout</button>
+        </form>
+      </div>
+    </div>
+  </nav>
+  
+    <div class="container mt-5">
+        <div class="card shadow rounded-3">
+            <div class="card-header bg-warning text-white">
+                <h3 class="mb-0">Edit User</h3>
+            </div>
+            <div class="card-body">
+                <form action="/admin/users/edit/<%= user.id %>" method="POST">
+
+                    <!-- Name -->
+                    <div class="mb-3">
+                        <label class="form-label">Name</label>
+                        <input type="text" name="name" class="form-control" value="<%= user.name %>" required>
+                    </div>
+
+                    <!-- Email -->
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" name="email" class="form-control" value="<%= user.email %>" required>
+                    </div>
+
+                    <!-- Role -->
+                    <div class="mb-3">
+                        <label class="form-label">Role</label>
+                        <select name="role" class="form-select" required>
+                            <option value="citizen" <%= user.role === 'citizen' ? 'selected' : '' %>>Citizen</option>
+                            <option value="officer" <%= user.role === 'officer' ? 'selected' : '' %>>Officer</option>
+                            <option value="admin" <%= user.role === 'admin' ? 'selected' : '' %>>Admin</option>
+                        </select>
+                    </div>
+
+                    <!-- National ID -->
+                    <div class="mb-3">
+                        <label class="form-label">National ID</label>
+                        <input type="text" name="national_id" class="form-control" value="<%= user.national_id || '' %>">
+                    </div>
+
+                    <!-- Date of Birth -->
+                    <div class="mb-3">
+                        <label class="form-label">Date of Birth</label>
+                        <input type="date" name="dob" class="form-control" value="<%= user.dob ? user.dob.toISOString().split('T')[0] : '' %>">
+                    </div>
+
+                    <!-- Contact -->
+                    <div class="mb-3">
+                        <label class="form-label">Contact</label>
+                        <input type="text" name="contact" class="form-control" value="<%= user.contact || '' %>">
+                    </div>
+
+                    <!-- Department (only if officer/admin wants to assign) -->
+                    <div class="mb-3">
+                        <label class="form-label">Department</label>
+                        <select name="department_id" class="form-select">
+                            <option value="">-- None --</option>
+                            <% departments.forEach(dep => { %>
+                                <option value="<%= dep.id %>" <%= user.department_id === dep.id ? 'selected' : '' %>>
+                                    <%= dep.name %>
+                                </option>
+                            <% }) %>
+                        </select>
+                    </div>
+
+                    <!-- Submit -->
+                    <button type="submit" class="btn btn-warning">Update User</button>
+                    <a href="/admin/users" class="btn btn-secondary">Cancel</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

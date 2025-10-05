@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Add User</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body { background-color: #fffaf5; }
+    .card { background-color: #fff3e6; border-radius: 12px; }
+    .btn-orange { background-color: #ff8800; color: white; }
+    .btn-orange:hover { background-color: #e67300; color: white; }
+  </style>
+</head>
+<body>
+    <!-- Header -->
+  <nav class="navbar navbar-expand-lg sticky-top" style="background-color: #0d47a1;">
+    <div class="container-fluid">
+      <a class="navbar-brand fw-bold text-white" href="/">E-Government Portal</a>
+      <div class="d-flex align-items-center">
+        <a href="/" class="nav-link text-white me-3">Home</a>
+        <a href="/help" class="nav-link text-white me-3">Help</a>
+        <form action="/logout" method="POST" class="d-inline">
+          <button type="submit" class="btn btn-light btn-sm">Logout</button>
+        </form>
+      </div>
+    </div>
+  </nav>
+  
+  <div class="container mt-5">
+    <div class="card shadow p-4">
+      <h2 class="text-center mb-4 text-orange">Add New User</h2>
+      <form action="/admin/users/add" method="POST">
+        
+        <div class="mb-3">
+          <label class="form-label">Name</label>
+          <input type="text" name="name" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Email</label>
+          <input type="email" name="email" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Password</label>
+          <input type="password" name="password" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Role</label>
+          <select name="role" id="role" class="form-select" required>
+            <option value="">-- Select Role --</option>
+            <option value="citizen">Citizen</option>
+            <option value="officer">Officer</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">National ID</label>
+          <input type="text" name="national_id" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Date of Birth</label>
+          <input type="date" name="dob" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Contact</label>
+          <input type="text" name="contact" class="form-control" required>
+        </div>
+
+        <!-- Only show department for officers -->
+        <div class="mb-3" id="departmentField" style="display:none;">
+          <label class="form-label">Department</label>
+          <select name="department_id" class="form-select">
+            <% departments.forEach(dept => { %>
+              <option value="<%= dept.id %>"><%= dept.name %></option>
+            <% }) %>
+          </select>
+        </div>
+
+        <button type="submit" class="btn btn-orange w-100">Add User</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const roleSelect = document.getElementById("role");
+    const deptField = document.getElementById("departmentField");
+    roleSelect.addEventListener("change", function() {
+      deptField.style.display = (this.value === "officer") ? "block" : "none";
+    });
+  </script>
+</body>
+</html>

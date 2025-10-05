@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Citizen Login | E-Government Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            background: #fff8e1;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        /* Navbar */
+        .navbar {
+            background-color: #0d47a1;
+        }
+        .navbar-brand, .nav-link {
+            color: white !important;
+            font-weight: 500;
+        }
+        .navbar .btn {
+            margin-left: 8px;
+        }
+
+        /* Card */
+        .card {
+            border: none;
+            background: #fff3cd;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #e67e22;
+            font-weight: 600;
+        }
+        .btn-orange {
+            background-color: #e67e22;
+            color: white;
+            border: none;
+        }
+        .btn-orange:hover {
+            background-color: #ca6f1e;
+        }
+        a {
+            color: #e67e22;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+
+        /* Footer */
+        footer {
+            background-color: #0d47a1;
+            color: white;
+            margin-top: 70px;
+            padding: 40px 0 20px;
+        }
+        footer a {
+            color: #ffcc00;
+            text-decoration: none;
+        }
+        footer a:hover {
+            text-decoration: underline;
+        }
+        .social-icons a {
+            color: white;
+            font-size: 1.3rem;
+            margin-right: 10px;
+            transition: color 0.2s ease;
+        }
+        .social-icons a:hover {
+            color: #ffcc00;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg sticky-top">
+    <div class="container">
+        <a class="navbar-brand" href="/">E-Government Portal</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto align-items-center">
+                <li class="nav-item"><a class="nav-link" href="/#workflow">Our Workflow</a></li>
+                <li class="nav-item"><a class="nav-link" href="/#services">Services</a></li>
+                <li class="nav-item"><a class="nav-link" href="/#about">About Us</a></li>
+                <li class="nav-item"><a class="nav-link" href="/#contact">Contact</a></li>
+                <li class="nav-item"><a class="btn btn-outline-light btn-sm" href="/login">Login</a></li>
+                <li class="nav-item"><a class="btn btn-light btn-sm" href="/register">Register</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- Login Card -->
+<div class="container mt-5">
+    <div class="card p-4 mx-auto" style="max-width: 400px;">
+        <h2 class="text-center mb-4">Login Page</h2>
+        <form action="/login" method="POST">
+            <div class="mb-3">
+                <input type="email" name="email" class="form-control" placeholder="Email Address" required>
+            </div>
+            <div class="mb-3">
+                <input type="password" name="password" class="form-control" placeholder="Password" required>
+            </div>
+            <button type="submit" class="btn btn-orange w-100">Login</button>
+        </form>
+        <p class="text-center mt-3">
+            Don’t have an account? <a href="/register">Register here</a>
+        </p>
+        <div class="text-center mt-3">
+            <a href="/" class="btn btn-dark btn-sm">Back to Home</a>
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer id="contact">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <h5>About</h5>
+                <ul class="list-unstyled">
+                    <li><a href="/#workflow">Our Work</a></li>
+                    <li><a href="/#services">Services</a></li>
+                    <li><a href="/#about">About Us</a></li>
+                </ul>
+            </div>
+            <div class="col-md-4 mb-3">
+                <h5>Contact</h5>
+                <p class="mb-1">Address: Kabul, Afghanistan</p>
+                <p class="mb-1">Phone: +93 (0) 20 220 1758</p>
+                <p>Email: <a href="mailto:info@egov.af">info@egov.af</a></p>
+            </div>
+            <div class="col-md-4 mb-3 text-md-end text-center">
+                <h5>Follow Us</h5>
+                <div class="social-icons mt-2">
+                    <a href="#"><i class="bi bi-facebook"></i></a>
+                    <a href="#"><i class="bi bi-twitter"></i></a>
+                    <a href="#"><i class="bi bi-linkedin"></i></a>
+                    <a href="#"><i class="bi bi-youtube"></i></a>
+                </div>
+            </div>
+        </div>
+        <hr style="border-color: rgba(255,255,255,0.2);">
+        <div class="text-center small">
+            Copyright © 2025 | E-Government Portal. All Rights Reserved.
+        </div>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

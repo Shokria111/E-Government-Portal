@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Service</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background: #fff8e1; }
+        .card { background: #fff3cd; border: none; }
+        h2 { color: #e67e22; }
+        .btn-orange { background-color: #e67e22; color: white; border: none; }
+        .btn-orange:hover { background-color: #ca6f1e; }
+        input, textarea, select { background: #fff8e1 !important; border: 1px solid #e67e22; }
+    </style>
+</head>
+<body>
+      <!-- Header -->
+  <nav class="navbar navbar-expand-lg sticky-top" style="background-color: #0d47a1;">
+    <div class="container-fluid">
+      <a class="navbar-brand fw-bold text-white" href="/">E-Government Portal</a>
+      <div class="d-flex align-items-center">
+        <a href="/" class="nav-link text-white me-3">Home</a>
+        <a href="/help" class="nav-link text-white me-3">Help</a>
+        <form action="/logout" method="POST" class="d-inline">
+          <button type="submit" class="btn btn-light btn-sm">Logout</button>
+        </form>
+      </div>
+    </div>
+  </nav>
+  
+<div class="container mt-5">
+    <div class="card shadow-lg p-4">
+        <h2 class="text-center">Add New Service</h2>
+        <form method="POST" action="/admin/services/add">
+            <div class="mb-3">
+                <label class="form-label">Service Name</label>
+                <input type="text" name="name" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Description</label>
+                <textarea name="description" class="form-control" required></textarea>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Department</label>
+                <select name="department_id" class="form-control" required>
+                    <% departments.forEach(d => { %>
+                        <option value="<%= d.id %>"><%= d.name %></option>
+                    <% }) %>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-orange">Add Service</button>
+            <a href="/services" class="btn btn-dark">Cancel</a>
+        </form>
+    </div>
+</div>
+</body>
+</html>

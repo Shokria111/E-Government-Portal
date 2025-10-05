@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title><%= status %> Requests</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: #fff8e1; /* soft cream */
+        }
+        .card {
+            border: none;
+            background: #fff3cd; /* pale yellow */
+            border-radius: 12px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #e67e22;
+            font-weight: bold;
+        }
+        /* Force Under Review to always show */
+    .badge-pending {
+        background-color: #e67e22 !important; /* orange */
+        color: #f3ede7 !important;
+        font-weight: bold;
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 6px;
+    }
+
+
+        /* Table Theme Fix */
+        .table {
+            background-color: #fff3cd !important; /* match card */
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .table thead {
+            background-color: #ffe0a3 !important; /* soft orange header */
+            color: #4a2c00;
+        }
+        .table tbody tr {
+            background-color: #fff8e1 !important; /* light cream rows */
+        }
+        .table tbody tr:nth-child(even) {
+            background-color: #ffefcc !important; /* alternating */
+        }
+        .table td, .table th {
+            vertical-align: middle;
+            border-color: #f5c26b; /* subtle orange borders */
+        }
+
+        /* Buttons consistent */
+        .btn-orange {
+            background-color: #e67e22;
+            color: white;
+            border: none;
+        }
+        .btn-orange:hover {
+            background-color: #ca6f1e;
+        }
+</style>
+
+</head>
+<body>
+  <!-- Header -->
+  <nav class="navbar navbar-expand-lg sticky-top" style="background-color: #0d47a1;">
+    <div class="container-fluid">
+      <a class="navbar-brand fw-bold text-white" href="/">E-Government Portal</a>
+      <div class="d-flex align-items-center">
+        <a href="/" class="nav-link text-white me-3">Home</a>
+        <a href="/help" class="nav-link text-white me-3">Help</a>
+        <form action="/logout" method="POST" class="d-inline">
+          <button type="submit" class="btn btn-light btn-sm">Logout</button>
+        </form>
+      </div>
+    </div>
+  </nav>
+
+<!-- Optional: Light padding so content doesn’t stick under navbar -->
+<div style="height: 20px;"></div>
+
+<div class="container mt-5">
+    <div class="card shadow-lg p-4">
+        <h2 class="text-center"><%= status %> Requests</h2>
+        <p class="text-center">Below are the <%= status.toLowerCase() %> service requests from your department.</p>
+
+        <div class="table-responsive mt-3">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Citizen</th>
+                        <th>Service</th>
+                        <th>Description</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                        <th>More...</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (requests.length > 0) { %>
+                        <% requests.forEach(r => { %>
+                            <tr>
+                                <td><%= r.id %></td>
+                                <td><%= r.citizen_name %></td>
+                                <td><%= r.service_name %></td>
+                                <td><%= r.description %></td>
+                                <td>
+                                    <span class="badge 
+                                        <%= r.status === 'under_review' ? 'badge-pending' :
+                                            r.status === 'approved' ? 'badge-approved' : 
+                                            'badge-rejected' %>">
+                                        <%= r.status %>
+                                    </span>
+                                </td>
+                                <td>
+                                    <% if (r.status === 'under_review') { %>
+                                        <form action="/officer/requests/<%= r.id %>/approve" method="POST" style="display:inline;">
+                                            <button type="submit" class="btn btn-success btn-sm">Approve</button>
+                                        </form>
+                                        <form action="/officer/requests/<%= r.id %>/reject" method="POST" style="display:inline;">
+                                            <button type="submit" class="btn btn-danger btn-sm">Reject</button>
+                                        </form>
+                                    <% } %>
+                                </td>
+                                <td><a href="/officer/requests/<%= r.id %>/view" class="btn btn-sm btn-primary">View</a></td>
+                            </tr>
+                        <% }) %>
+                    <% } else { %>
+                        <tr>
+                            <td colspan="7" class="text-center">No <%= status.toLowerCase() %> requests found.</td>
+                        </tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="text-center mt-3">
+            <a href="/officer_dashboard" class="btn btn-orange">⬅ Back to Dashboard</a>
+        </div>
+    </div>
+</div>
+</body>
+</html>

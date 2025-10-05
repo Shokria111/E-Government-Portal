@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Citizen Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body { background: #fff8e1; }
+    .card { border: none; background: #fff3cd; }
+    h2 { color: #e67e22; }
+
+    .btn-orange {
+      background-color: #e67e22; color: white; border: none;
+    }
+    .btn-orange:hover { background-color: #ca6f1e; }
+
+    .profile-img {
+      width: 80px; height: 80px; border-radius: 50%; object-fit: cover;
+      margin-bottom: 15px;
+    }
+
+    .navbar {
+      background-color: #0d47a1;
+    }
+    .navbar-brand, .nav-link, .navbar-toggler {
+      color: white !important;
+    }
+    .offcanvas {
+      width: 280px;
+    }
+    .offcanvas a {
+      display: block;
+      padding: 10px;
+      color: #333;
+      text-decoration: none;
+      border-radius: 6px;
+    }
+    .offcanvas a:hover {
+      background-color: #f1f1f1;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg sticky-top">
+  <div class="container-fluid">
+    <button class="btn btn-light me-3" type="button" data-bs-toggle="offcanvas" data-bs-target="#citizenSidebar">
+      ☰ Dashboard Menu
+    </button>
+    <a class="navbar-brand fw-bold" href="/">E-Government Portal</a>
+  </div>
+</nav>
+
+<!-- Main Dashboard Card -->
+<div class="container mt-4">
+  <div class="card shadow-lg p-4">
+    <h2 class="text-center">Citizen Dashboard</h2>
+    <p class="text-center">Welcome! Here you can apply for services and track your applications.</p>
+
+    <!-- Apply Button -->
+    <div class="d-grid gap-2 mb-4">
+      <a href="/citizen/apply" class="btn btn-orange">Apply for a Service</a>
+    </div>
+
+    <!-- Requests table -->
+    <h4>Your Applications</h4>
+    <table class="table table-striped table-hover">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Service</th>
+          <th>Status</th>
+          <th>Details</th>
+          <th>Submitted At</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (requests.length > 0) { %>
+          <% requests.forEach(r => { %>
+            <tr>
+              <td><%= r.id %></td>
+              <td><%= r.service_name %></td>
+              <td>
+                <span class="badge 
+                  <%= r.status === 'approved' ? 'bg-success' : 
+                      r.status === 'rejected' ? 'bg-danger' : 
+                      r.status === 'under_review' ? 'bg-info text-dark' :
+                      'bg-warning text-dark' %>">
+                  <%= r.status %>
+                </span>
+              </td>
+              <td><%= r.details %></td>
+              <td><%= r.created_at.toDateString() %></td>
+              <td>
+                <% if (r.status === 'awaiting_payment') { %>
+                  <a href="/citizen/pay/<%= r.id %>" class="btn btn-sm btn-success">Pay Now</a>
+                <% } else { %>
+                  —
+                <% } %>
+              </td>
+            </tr>
+          <% }) %>
+        <% } else { %>
+          <tr>
+            <td colspan="6" class="text-center">No requests yet.</td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Sidebar / Offcanvas -->
+<div class="offcanvas offcanvas-start" tabindex="-1" id="citizenSidebar">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title">Dashboard Menu</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+  </div>
+  <div class="offcanvas-body text-center">
+    <!-- Profile picture -->
+    <img src="<%= citizen.profile_pic || '/uploads/default-avatar.png' %>" class="profile-img" alt="Citizen">
+
+    <p><strong><%= citizen.name %></strong></p>
+    <p class="text-muted"><%= citizen.email %></p>
+    <p><strong>National ID:</strong> <%= citizen.national_id %></p>
+    <p><strong>Date of Birth:</strong> <%= citizen.dob ? new Date(citizen.dob).toDateString() : "N/A" %></p>
+    <p><strong>Contact:</strong> <%= citizen.contact %></p>
+    <a href="/citizen/apply">📝 Apply for Service</a>
+    <a data-bs-toggle="modal" data-bs-target="#uploadProfileModal">📤 Upload Photo</a>
+
+    <form action="/logout" method="POST" class="mt-3">
+      <button type="submit" class="btn btn-dark w-100">🚪 Logout</button>
+    </form>
+  </div>
+</div>
+
+<!-- Upload Profile Modal -->
+<div class="modal fade" id="uploadProfileModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form action="/upload_profile" method="POST" enctype="multipart/form-data">
+        <div class="modal-header">
+          <h5 class="modal-title">Upload Profile Picture</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="file" name="profile_pic" class="form-control" required>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-orange">Upload</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+<!-- Footer -->
+<footer class="text-center text-lg-start text-white mt-5" style="background-color: #0d47a1;">
+  <div class="container p-4">
+    <div class="row">
+
+      <!-- Contact Info -->
+      <div class="col-lg-6 col-md-12 mb-4 mb-md-0 text-start">
+        <h5 class="text-uppercase fw-bold">Contact Us</h5>
+        <p>
+          📍 223 Arg St, Kabul, Afghanistan<br>
+          📞 +1 (234) 567-8900 <br>
+          📧 support@govportal.com
+        </p>
+      </div>
+
+      <!-- Social Media -->
+      <div class="col-lg-6 col-md-12 mb-4 mb-md-0 text-end">
+        <h5 class="text-uppercase fw-bold">Follow Us</h5>
+        <a href="#" class="text-white me-3">
+          <i class="fab fa-facebook fa-lg"></i>
+        </a>
+        <a href="#" class="text-white me-3">
+          <i class="fab fa-twitter fa-lg"></i>
+        </a>
+        <a href="#" class="text-white me-3">
+          <i class="fab fa-instagram fa-lg"></i>
+        </a>
+        <a href="#" class="text-white me-3">
+          <i class="fab fa-linkedin fa-lg"></i>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Bar -->
+  <div class="text-center p-3" style="background-color: rgba(0,0,0,0.2);">
+    © <%= new Date().getFullYear() %> E-Government Portal. All rights reserved.
+  </div>
+</footer>
+
+<!-- Font Awesome (for social icons) -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+
+</html>
