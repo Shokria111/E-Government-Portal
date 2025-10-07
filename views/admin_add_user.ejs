@@ -11,7 +11,7 @@
   </style>
 </head>
 <body>
-    <!-- Header -->
+  <!-- Header -->
   <nav class="navbar navbar-expand-lg sticky-top" style="background-color: #0d47a1;">
     <div class="container-fluid">
       <a class="navbar-brand fw-bold text-white" href="/">E-Government Portal</a>
@@ -24,12 +24,12 @@
       </div>
     </div>
   </nav>
-  
+
   <div class="container mt-5">
     <div class="card shadow p-4">
       <h2 class="text-center mb-4 text-orange">Add New User</h2>
       <form action="/admin/users/add" method="POST">
-        
+
         <div class="mb-3">
           <label class="form-label">Name</label>
           <input type="text" name="name" class="form-control" required>
@@ -70,17 +70,31 @@
           <input type="text" name="contact" class="form-control" required>
         </div>
 
-        <!-- Only show department for officers -->
+        <!-- Department (only visible for officers) -->
         <div class="mb-3" id="departmentField" style="display:none;">
           <label class="form-label">Department</label>
-          <select name="department_id" class="form-select">
+          <select name="department_id" id="departmentSelect" class="form-select">
+            <option value="">-- Select Department --</option>
             <% departments.forEach(dept => { %>
               <option value="<%= dept.id %>"><%= dept.name %></option>
             <% }) %>
           </select>
         </div>
 
-        <button type="submit" class="btn btn-orange w-100">Add User</button>
+        <!-- Service (only visible for officers) -->
+        <div class="mb-3" id="serviceField" style="display:none;">
+          <label class="form-label">Service</label>
+          <select name="service_id" id="serviceSelect" class="form-select">
+            <option value="">-- Select Service --</option>
+          </select>
+        </div>
+
+        <!-- Buttons -->
+        <div class="d-flex justify-content-between mt-4">
+          <a href="/admin/users" class="btn btn-secondary w-50 me-2">Cancel</a>
+          <button type="submit" class="btn btn-orange w-50 ms-2">Add User</button>
+        </div>
+
       </form>
     </div>
   </div>
@@ -88,8 +102,40 @@
   <script>
     const roleSelect = document.getElementById("role");
     const deptField = document.getElementById("departmentField");
+    const serviceField = document.getElementById("serviceField");
+    const deptSelect = document.getElementById("departmentSelect");
+    const serviceSelect = document.getElementById("serviceSelect");
+
+    // Show/hide department & service based on role
     roleSelect.addEventListener("change", function() {
-      deptField.style.display = (this.value === "officer") ? "block" : "none";
+      if (this.value === "officer") {
+        deptField.style.display = "block";
+        serviceField.style.display = "block";
+      } else {
+        deptField.style.display = "none";
+        serviceField.style.display = "none";
+        serviceSelect.innerHTML = '<option value="">-- Select Service --</option>';
+      }
+    });
+
+    // Load services when department changes
+    deptSelect.addEventListener("change", async function() {
+      const deptId = this.value;
+      serviceSelect.innerHTML = '<option value="">-- Select Service --</option>';
+      if (!deptId) return;
+
+      try {
+        const res = await fetch(`/admin/getServices/${deptId}`);
+        const services = await res.json();
+        services.forEach(service => {
+          const option = document.createElement("option");
+          option.value = service.id;
+          option.textContent = service.name;
+          serviceSelect.appendChild(option);
+        });
+      } catch (err) {
+        console.error("Error fetching services:", err);
+      }
     });
   </script>
 </body>

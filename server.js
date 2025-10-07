@@ -191,28 +191,7 @@ app.get('/service/:id', (req, res) => {
     res.redirect(`/dashboard/apply/${serviceId}`);
 });
 
-// Upload profile picture
-// app.post('/upload_profile', upload.single('profile_pic'), async (req, res) => {
-//     if (!req.session.userId) {
-//         return res.status(401).send("Not logged in");
-//     }
-//     if (!req.file) {
-//         return res.status(400).send("No file uploaded");
-//     }
-
-//     const filePath = `/uploads/profile_pics/${req.file.filename}`;
-
-//     try {
-//         await pool.query(
-//             "UPDATE users SET profile_pic = $1 WHERE id = $2",
-//             [filePath, req.session.userId]
-//         );
-//         res.redirect('officer_dashboard'); //back to dashboard
-//     } catch (err) {
-//         console.error("Error saving profile picture:", err);
-//         res.status(500).send("Upload failed");
-//     }
-// });
+// Upload profile picture for all users
 app.post('/upload_profile', upload.single('profile_pic'), async (req, res) => {
   if (!req.session.userId) return res.status(401).send("Not logged in");
   if (!req.file) return res.status(400).send("No file uploaded");
@@ -348,14 +327,15 @@ app.get('/my_requests', requireRole('citizen'), async (req, res) => {
 app.get('/officer_dashboard', requireRole('officer'), async (req, res) => {
     const userId = req.session.userId;
     try {
-        const result = await pool.query(
-        `SELECT u.name, u.email, u.national_id, u.dob, u.contact, u.profile_pic, d.name AS department_name
-        FROM users u
-        LEFT JOIN departments d ON u.department_id = d.id
-        WHERE u.id = $1`,
-           [userId]
-        );
-
+       const result = await pool.query(
+            `SELECT u.name, u.email, u.national_id, u.dob, u.contact, u.profile_pic, 
+                    d.name AS department_name, s.name AS service_name
+            FROM users u
+            LEFT JOIN departments d ON u.department_id = d.id
+            LEFT JOIN services s ON u.service_id = s.id
+            WHERE u.id = $1`,
+            [userId]
+            );
         const officer = result.rows[0];
         res.render('officer_dashboard', { officer });
     } catch (err) {
@@ -391,35 +371,37 @@ app.get('/officer/requests/:id/view', requireRole('officer'), async (req, res) =
   const officerId = req.session.userId;
 
   try {
-    const officer = await pool.query("SELECT department_id FROM users WHERE id=$1", [officerId]);
+    const officer = await pool.query("SELECT department_id, service_id FROM users WHERE id=$1", [officerId]);
     if (officer.rows.length === 0) {
       return res.status(400).send("Officer not found");
     }
-    const officerDept = officer.rows[0].department_id;
+    
+    const { department_id: officerDept, service_id: officerService } = officer.rows[0];
 
     const result = await pool.query(
-      `SELECT r.id,
-              r.description,
-              r.status,
-              r.created_at,
-              u.name AS citizen_name,
-              u.email AS citizen_email,
-              u.contact AS citizen_contact,
-              u.national_id,
-              s.name AS service_name,
-              COALESCE(json_agg(DISTINCT d.*) FILTER (WHERE d.id IS NOT NULL), '[]') AS documents,
-              p.proof_file,
-              p.status AS payment_status,
-              p.amount
-       FROM service_requests r
-       JOIN users u ON r.citizen_id = u.id
-       JOIN services s ON r.service_id = s.id
-       LEFT JOIN documents d ON r.id = d.request_id
-       LEFT JOIN payments p ON r.id = p.request_id
-       WHERE r.id = $1 AND s.department_id = $2
-       GROUP BY r.id, u.name, u.email, u.contact, u.national_id, s.name, p.proof_file, p.status, p.amount`,
-      [id, officerDept]
-    );
+  `SELECT r.id,
+          r.description,
+          r.status,
+          r.created_at,
+          u.name AS citizen_name,
+          u.email AS citizen_email,
+          u.contact AS citizen_contact,
+          u.national_id,
+          s.name AS service_name,
+          COALESCE(json_agg(DISTINCT d.*) FILTER (WHERE d.id IS NOT NULL), '[]') AS documents,
+          p.proof_file,
+          p.status AS payment_status,
+          p.amount
+   FROM service_requests r
+   JOIN users u ON r.citizen_id = u.id
+   JOIN services s ON r.service_id = s.id
+   LEFT JOIN documents d ON r.id = d.request_id
+   LEFT JOIN payments p ON r.id = p.request_id
+   WHERE r.id = $1 AND s.department_id = $2 AND s.id = $3
+   GROUP BY r.id, u.name, u.email, u.contact, u.national_id, s.name, p.proof_file, p.status, p.amount`,
+  [id, officerDept, officerService]
+);
+
 
     if (result.rows.length === 0) {
       return res.status(404).send("Request not found or not in your department");
@@ -471,10 +453,12 @@ app.post('/officer_requests/:id/:action', requireRole('officer'), async (req, re
 app.get('/officer/requests/:status', requireRole('officer'), async (req, res) => {
     try {
         const officerId = req.session.userId;
-        const officer = await pool.query("SELECT department_id FROM users WHERE id=$1", [officerId]);
-
+        const officer = await pool.query("SELECT department_id, service_id FROM users WHERE id=$1", [officerId]);
+        
         if (officer.rows.length === 0) return res.status(400).send('Officer not found');
-        const deptId = officer.rows[0].department_id;
+        const { department_id: deptId, service_id: serviceId } = officer.rows[0];
+
+       //const deptId = officer.rows[0].department_id;
 
         // Map officer-friendly status to DB status
         let dbStatus;
@@ -483,14 +467,15 @@ app.get('/officer/requests/:status', requireRole('officer'), async (req, res) =>
         else if (req.params.status === 'rejected') dbStatus = 'rejected';
         else return res.status(400).send('Invalid status');
 
-        const result = await pool.query(
+       const result = await pool.query(
             `SELECT r.id, r.description, r.status, u.name AS citizen_name, s.name AS service_name
-             FROM service_requests r
-             JOIN users u ON r.citizen_id = u.id
-             JOIN services s ON r.service_id = s.id
-             WHERE r.status = $1 AND s.department_id = $2`,
-            [dbStatus, deptId]
+            FROM service_requests r
+            JOIN users u ON r.citizen_id = u.id
+            JOIN services s ON r.service_id = s.id
+            WHERE r.status = $1 AND s.department_id = $2 AND s.id = $3`,
+            [dbStatus, deptId, serviceId]
         );
+
 
         res.render('officer_requests', { requests: result.rows, status: req.params.status });
     } catch (err) {
@@ -531,15 +516,6 @@ app.post('/officer/requests/:id/reject', requireRole('officer'), async (req, res
 
 
 ///////////////////////////////////Admin dashboard routes //////////////////////////////
-// app.get('/admin_dashboard', requireRole('admin'), (req, res) => {
-//     res.render("admin_dashboard", {
-//   admin: {
-//     name: "System Admin",
-//     email: "admin@govportal.com",
-//     profilePicture: null // or a real URL
-//   }
-// }); 
-// });
 app.get('/admin_dashboard', requireRole('admin'), async (req, res) => {
   try {
     const result = await pool.query(
@@ -558,7 +534,6 @@ app.get('/admin_dashboard', requireRole('admin'), async (req, res) => {
     res.status(500).send("Error loading admin dashboard");
   }
 });
-
 // Manage Users
 app.get("/admin/users", requireRole('admin'), async (req, res) => {
     try {
@@ -569,7 +544,6 @@ app.get("/admin/users", requireRole('admin'), async (req, res) => {
         res.status(500).send("Error fetching users");
     }
 });
-
 // Manage Services
 app.get("/admin/services", requireRole('admin'), async (req, res) => {
     try {
@@ -580,7 +554,6 @@ app.get("/admin/services", requireRole('admin'), async (req, res) => {
         res.status(500).send("Error fetching services");
     }
 });
-
 // Manage Departments
 app.get("/admin/departments", requireRole('admin'), async (req, res) => {
     try {
@@ -591,7 +564,6 @@ app.get("/admin/departments", requireRole('admin'), async (req, res) => {
         res.status(500).send("Error fetching departments");
     }
 });
-
 //View reports
 app.get("/admin/reports", requireRole('admin'), async (req, res) => {
     try {
@@ -632,9 +604,9 @@ app.get("/admin/reports", requireRole('admin'), async (req, res) => {
     }
 });
 
-//                other Windows inside the admins dashboard. 
 
-// ---------------- ADMIN: USERS ----------------
+// ------------------------------------- ADMIN: USERS ---------------------------------------------------------
+
 app.get("/admin/users/add", requireRole('admin'), async (req, res) => {
   try {
     const result = await pool.query("SELECT * FROM departments ORDER BY name ASC");
@@ -644,38 +616,49 @@ app.get("/admin/users/add", requireRole('admin'), async (req, res) => {
     res.status(500).send("Error loading add user form");
   }
 });
-// ADD USER (Admin)
-app.post("/admin/users/add", requireRole('admin'), async (req, res) => {
-    const { name, email, password, role, national_id, dob, contact, department_id } = req.body;
-
-    try {
-        // hash password before saving
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        // insert query
-        if (role === "officer") {
-            await pool.query(
-                `INSERT INTO users 
-                 (name, email, password, role, national_id, dob, contact, department_id) 
-                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-                [name, email, hashedPassword, role, national_id, dob, contact, department_id]
-            );
-        } else {
-            await pool.query(
-                `INSERT INTO users 
-                 (name, email, password, role, national_id, dob, contact) 
-                 VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-                [name, email, hashedPassword, role, national_id, dob, contact]
-            );
-        }
-
-        res.redirect("/admin/users");
-    } catch (err) {
-        console.error("Error adding user:", err);
-        res.status(500).send("Error adding user");
-    }
+// Fetch services for a specific department (AJAX)
+app.get("/admin/getServices/:departmentId", requireRole('admin'), async (req, res) => {
+  const { departmentId } = req.params;
+  try {
+    const result = await pool.query(
+      "SELECT id, name FROM services WHERE department_id = $1 ORDER BY name ASC",
+      [departmentId]
+    );
+    res.json(result.rows); // return JSON array
+  } catch (err) {
+    console.error("Error fetching services:", err);
+    res.status(500).json({ error: "Failed to fetch services" });
+  }
 });
-//geting and edit one users information 
+app.post("/admin/users/add", requireRole('admin'), async (req, res) => {
+  const { name, email, password, role, national_id, dob, contact, department_id, service_id } = req.body;
+
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    if (role === "officer") {
+      await pool.query(
+        `INSERT INTO users 
+         (name, email, password, role, national_id, dob, contact, department_id, service_id) 
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+        [name, email, hashedPassword, role, national_id, dob, contact, department_id, service_id]
+      );
+    } else {
+      await pool.query(
+        `INSERT INTO users 
+         (name, email, password, role, national_id, dob, contact) 
+         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [name, email, hashedPassword, role, national_id, dob, contact]
+      );
+    }
+
+    res.redirect("/admin/users");
+  } catch (err) {
+    console.error("Error adding user:", err);
+    res.status(500).send("Error adding user");
+  }
+});
+//geting and edit one users information
 app.get('/admin/users/edit/:id', requireRole('admin'), async (req, res) => {
     try {
         const { id } = req.params;
@@ -725,10 +708,9 @@ app.get('/admin/users/delete/:id', requireRole('admin'), async (req, res) => {
     res.redirect('/admin/users');
 });
 
-// ---------------- ADMIN: SERVICES ----------------
-// app.get('/admin/services/add', requireRole('admin'), (req, res) => {
-//     res.render('admin_add_service');  // form ejs
-// });
+
+// -- --------------------------ADMIN: SERVICES dding new service by admin--------------------------------------------
+
 app.get('/admin/services/add', requireRole('admin'), async (req, res) => {
   try {
     const result = await pool.query('SELECT id, name FROM departments ORDER BY name');
@@ -738,7 +720,6 @@ app.get('/admin/services/add', requireRole('admin'), async (req, res) => {
     res.send('Error loading departments');
   }
 });
-//adding new service by admin
 app.post('/admin/services/add', requireRole('admin'), async (req, res) => {
     const { name, description, department_id } = req.body;
     await pool.query(
@@ -753,7 +734,6 @@ app.get('/admin/services/edit/:id', requireRole('admin'), async (req, res) => {
     const service = (await pool.query('SELECT * FROM services WHERE id=$1', [id])).rows[0];
     res.render('admin_edit_service', { service });
 });
-
 app.post('/admin/services/edit/:id', requireRole('admin'), async (req, res) => {
     const { id } = req.params;
     const { name, description, department_id } = req.body;
@@ -770,7 +750,9 @@ app.get('/admin/services/delete/:id', requireRole('admin'), async (req, res) => 
     res.redirect('/admin/services');
 });
 
-// ---------------- ADMIN: DEPARTMENTS ----------------
+
+
+// ---------------- ADMIN adds department, edit and delete it -----------------------------------------
 app.get('/admin/departments/add', requireRole('admin'), (req, res) => {
     res.render('admin_add_department');  // form ejs
 });
