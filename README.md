@@ -1,7 +1,3 @@
-Perfect 👍 Thanks for clarifying — based on everything you’ve shared so far, here’s a **ready-to-use README.md** draft tailored to your project.
-
----
-
 # 🌐 E-Government Citizen Services Portal
 
 *Capstone Project*
